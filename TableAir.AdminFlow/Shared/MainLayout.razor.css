@@ -1,0 +1,20 @@
+.mdc-table {
+    margin: 5px 0 10px;
+}
+
+    .mdc-table td {
+        padding: 5px 5px 5px 10px;
+    }
+
+.mdc-text-field--filled {
+    height: 50px;
+}
+
+.mat-accordion .mat-expansion-panel__content {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.mdc-paginator .mdc-select {
+    min-width: 100px;
+}

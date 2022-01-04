@@ -1,0 +1,458 @@
+﻿@implements IDisposable
+@inherits LayoutComponentBase
+@inject IHttpContextAccessor httpContextAccessor
+@inject NavigationManager NavigationManager
+
+<MatAppBarContainer>
+    <MatAppBar Fixed="true">
+        <MatAppBarRow>
+            <MatAppBarSection>
+                <MatAppBarTitle>Microsoft sync integration panel</MatAppBarTitle>
+            </MatAppBarSection>
+            <MatAppBarSection Align="@MatAppBarSectionAlign.End">
+                @if (BambooHRSync.IsSyncing)
+                {
+                    <h6 style="white-space: nowrap; text-align: right">Syncing users from BambooHR<br />@SyncPoints</h6>
+                }
+                else if (!_loading)
+                {
+                    <MatButton Raised="true" Style="white-space: nowrap" OnClick="() => DoForceRefresh()">Force sync users</MatButton>
+                }
+            </MatAppBarSection>
+            @*<MatAppBarSection Align="@MatAppBarSectionAlign.End">
+                    <Login />
+                </MatAppBarSection>*@
+        </MatAppBarRow>
+    </MatAppBar>
+
+    <MatAppBarContent>
+        <div style="margin: 5px">
+            @if (_stagingModel.Records.Count > 0)
+            {
+                <MatAccordion>
+                    <MatExpansionPanel Expanded="true">
+                        <MatExpansionPanelSummary>
+                            <MatExpansionPanelHeader>
+                                <b>Users in review (@(_stagingModel.Records.Count))</b>
+                            </MatExpansionPanelHeader>
+                        </MatExpansionPanelSummary>
+                        <MatExpansionPanelDetails>
+                            @if (_loading)
+                            {
+                                <MatProgressCircle Indeterminate="true" Size="MatProgressCircleSize.Medium" /><br />
+                            }
+                            <MatTable Items="@_stagingModel.Records" AllowSelection="false"
+                                        FilterByColumnName="@_stagingModel.Filter" SearchTermFieldPlaceHolder="" SearchTermFieldLabel="@_stagingModel.FilterLabel"
+                                        DebounceMilliseconds="300" ShowPaging="true" PageSize="5" UseSortHeaderRow="true">
+                                <MatTableHeader>
+                                    <MatSortHeaderRow SortChanged="@_stagingModel.Sort" @bind-Direction="_stagingModel.SortDirection">
+                                        <MatSortHeader SortId="email">Email</MatSortHeader>
+                                        <MatSortHeader SortId="firstName">First&nbsp;name</MatSortHeader>
+                                        <MatSortHeader SortId="lastName">Last&nbsp;name</MatSortHeader>
+                                        <MatSortHeader SortId="location">Location</MatSortHeader>
+                                        <MatSortHeader Style="width: 50%" SortId="department">Department</MatSortHeader>
+                                        <MatSortHeader Style="width: 50%">Actions</MatSortHeader>
+                                    </MatSortHeaderRow>
+                                </MatTableHeader>
+                                <MatTableRow>
+                                    <td>@context.WorkEmail</td>
+                                    <td>@context.FirstName</td>
+                                    <td>@context.LastName</td>
+                                    <td>@context.Location</td>
+                                    <td>@context.Department</td>
+                                    <td>
+                                        <MatButton Outlined="true" Style="white-space: nowrap" OnClick="() => DoSync(context)">Sync</MatButton>
+                                        <MatButton Outlined="true" Style="white-space: nowrap" OnClick="() => DoRemove(context)">Do not sync</MatButton>
+                                    </td>
+                                </MatTableRow>
+                            </MatTable>
+                        </MatExpansionPanelDetails>
+                    </MatExpansionPanel>
+                </MatAccordion>
+            }
+
+            <MatDialog @bind-IsOpen="@_doShowHistory" CanBeClosed="false">
+                <MatDialogTitle>Sync history</MatDialogTitle>
+                <MatDialogContent>
+                    <MatTable Items="@_showHistoryForRecord.History" PageRecordCountLabel="">
+                        <MatTableHeader>
+                            <th>Date/Time</th>
+                            <th style="width: 100%">Event</th>
+                        </MatTableHeader>
+                        <MatTableRow>
+                            <td style="white-space: nowrap">@context.Item1.ToString("u").Substring(0, 19)</td>
+                            <td>@context.Item2</td>
+                        </MatTableRow>
+                    </MatTable>
+                </MatDialogContent>
+                <MatDialogActions>
+                    <MatButton OnClick="@(e => { _showHistoryForRecord = _doNotShowHistory; })">Close</MatButton>
+                </MatDialogActions>
+            </MatDialog>
+
+            <MatAccordion>
+                <MatExpansionPanel>
+                    <MatExpansionPanelSummary>
+                        <MatExpansionPanelHeader>
+                            <b>Synchronized users (@(_sync.Count()))</b>
+                        </MatExpansionPanelHeader>
+                    </MatExpansionPanelSummary>
+                    <MatExpansionPanelDetails>
+                        <MatTable Items="@_sync" AllowSelection="false"
+                                    FilterByColumnName="@_syncFilter" SearchTermFieldPlaceHolder="" SearchTermFieldLabel="@_syncFilterLabel"
+                                    DebounceMilliseconds="300" ShowPaging="true" PageSize="10" UseSortHeaderRow="true">
+                            <MatTableHeader>
+                                <MatSortHeaderRow SortChanged="@SortSyncData">
+                                    <MatSortHeader SortId="email">Email</MatSortHeader>
+                                    <MatSortHeader SortId="firstName">First&nbsp;name</MatSortHeader>
+                                    <MatSortHeader SortId="lastName">Last&nbsp;name</MatSortHeader>
+                                    <MatSortHeader SortId="location">Location</MatSortHeader>
+                                    <MatSortHeader Style="width: 50%" SortId="department">Department</MatSortHeader>
+                                    <MatSortHeader Style="width: 50%">Actions</MatSortHeader>
+                                </MatSortHeaderRow>
+                            </MatTableHeader>
+                            <MatTableRow>
+                                <td>@context.WorkEmail</td>
+                                <td>@context.FirstName</td>
+                                <td>@context.LastName</td>
+                                <td>@context.Location</td>
+                                <td>@context.Department</td>
+                                <td>
+                                    <MatButton Outlined="true" Style="white-space: nowrap" OnClick="() => DoShowHistory(context)">Sync history</MatButton>
+                                    <MatButton Outlined="true" Style="white-space: nowrap" OnClick="() => DoRemove(context)">Remove from sync</MatButton>
+                                    <MatButton Outlined="true" Style="white-space: nowrap">Repeat invitation email</MatButton>
+                                </td>
+                            </MatTableRow>
+                        </MatTable>
+                    </MatExpansionPanelDetails>
+                </MatExpansionPanel>
+                <MatExpansionPanel>
+                    <MatExpansionPanelSummary>
+                        <MatExpansionPanelHeader>
+                            <b>Non synchronized users (@(_doNotSync.Count()))</b>
+                        </MatExpansionPanelHeader>
+                    </MatExpansionPanelSummary>
+                    <MatExpansionPanelDetails>
+                        <MatTable Items="@_doNotSync" AllowSelection="false"
+                                    FilterByColumnName="@_doNotSyncFilter" SearchTermFieldPlaceHolder="" SearchTermFieldLabel="@_doNotSyncFilterLabel"
+                                    DebounceMilliseconds="300" ShowPaging="true" PageSize="10" UseSortHeaderRow="true">
+                            <MatTableHeader>
+                                <MatSortHeaderRow SortChanged="@SortDoNotSyncData">
+                                    <MatSortHeader SortId="email">Email</MatSortHeader>
+                                    <MatSortHeader SortId="firstName">First&nbsp;name</MatSortHeader>
+                                    <MatSortHeader SortId="lastName">Last&nbsp;name</MatSortHeader>
+                                    <MatSortHeader SortId="location">Location</MatSortHeader>
+                                    <MatSortHeader Style="width: 50%" SortId="department">Department</MatSortHeader>
+                                    <MatSortHeader Style="width: 50%">Actions</MatSortHeader>
+                                </MatSortHeaderRow>
+                            </MatTableHeader>
+                            <MatTableRow>
+                                <td>@context.WorkEmail</td>
+                                <td>@context.FirstName</td>
+                                <td>@context.LastName</td>
+                                <td>@context.Location</td>
+                                <td>@context.Department</td>
+                                <td><MatButton Outlined="true" Style="white-space: nowrap" OnClick="() => DoSync(context)">Sync</MatButton></td>
+                            </MatTableRow>
+                        </MatTable>
+                    </MatExpansionPanelDetails>
+                </MatExpansionPanel>
+                <MatExpansionPanel>
+                    <MatExpansionPanelSummary>
+                        <MatExpansionPanelHeader>
+                            <b>Email preferences</b>
+                        </MatExpansionPanelHeader>
+                    </MatExpansionPanelSummary>
+                    <MatExpansionPanelDetails>
+                        <MatButton Type="submit" Raised="true">Save email preferences</MatButton>
+                        <br />
+                        <br />
+                        <h6>Integrations admin email</h6>
+                        <MatTextField @bind-Value="@AdminEmail" FullWidth="true"></MatTextField>
+                        <br />
+                        <h6>Invitation email subject</h6>
+                        <MatTextField @bind-Value="@EmailSubject" FullWidth="true"></MatTextField>
+                        <br />
+                        <h6>Invitation email template</h6>
+                        <MatTextField TextArea="true" Box="true" @bind-Value="@EmailTemplate" FullWidth="true" Style="height: 240px"></MatTextField>
+                    </MatExpansionPanelDetails>
+                </MatExpansionPanel>
+            </MatAccordion>
+        </div>
+    </MatAppBarContent>
+</MatAppBarContainer>
+
+@code {
+    public string AdminEmail = "gin.kisonas@tableair.com";
+    public string EmailSubject = @"Welcome to TableAir";
+    public string EmailTemplate = @"Dear {FirstName} {LastName},
+
+We have added your account to TableAir system, for hot desk booking. Please set-up your password there: {TableAirUrl}
+
+Yours,
+HR department";
+
+    private static BambooHREmployeeRecord _doNotShowHistory = new BambooHREmployeeRecord();
+    private BambooHREmployeeRecord _showHistoryForRecord = _doNotShowHistory;
+    private bool _doShowHistory { get => _showHistoryForRecord != _doNotShowHistory; set { } }
+    private bool _loading = true;
+    private int _syncPointsCount = 3;
+    private string SyncPoints
+    {
+        get
+        {
+            var points = "";
+            for (var i = 0; i < _syncPointsCount; i++)
+            {
+                points += ".";
+            }
+
+            Task.Run(() =>
+            {
+                System.Threading.Thread.Sleep(1000);
+
+                if (_syncPointsCount >= 3 || _syncPointsCount <= 0)
+                {
+                    _syncPointsCount = 1;
+                }
+                else
+                {
+                    _syncPointsCount++;
+                }
+                InvokeAsync(StateHasChanged);
+            });
+
+            return points;
+        }
+    }
+
+    private MainLayoutStaging _stagingModel;
+
+    private List<BambooHREmployeeRecord> _doNotSync = null;
+    private string _doNotSyncFilter = "WorkEmail";
+    private string _doNotSyncFilterLabel = "Filter by employee email";
+
+    void SortDoNotSyncData(MatSortChangedEvent sort)
+    {
+        if (!(sort == null || sort.Direction == MatSortDirection.None || string.IsNullOrEmpty(sort.SortId)))
+        {
+            Comparison<BambooHREmployeeRecord> comparison = null;
+            switch (sort.SortId)
+            {
+                case "email":
+                    _doNotSyncFilter = "WorkEmail";
+                    _doNotSyncFilterLabel = "Filter by employee email";
+
+                    comparison = (s1, s2) => string.Compare(s1.WorkEmail, s2.WorkEmail, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+
+                case "firstName":
+                    _doNotSyncFilter = "FirstName";
+                    _doNotSyncFilterLabel = "Filter by employee name";
+
+                    comparison = (s1, s2) => string.Compare(s1.FirstName, s2.FirstName, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+
+                case "lastName":
+                    _doNotSyncFilter = "LastName";
+                    _doNotSyncFilterLabel = "Filter by employee surname";
+
+                    comparison = (s1, s2) => string.Compare(s1.LastName, s2.LastName, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+
+                case "location":
+                    _doNotSyncFilter = "Location";
+                    _doNotSyncFilterLabel = "Filter by employee location";
+
+                    comparison = (s1, s2) => string.Compare(s1.Location, s2.Location, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+
+                case "department":
+                    _doNotSyncFilter = "Department";
+                    _doNotSyncFilterLabel = "Filter by employee department";
+
+                    comparison = (s1, s2) => string.Compare(s1.Department, s2.Department, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+            }
+
+            if (comparison != null)
+            {
+                if (sort.Direction == MatSortDirection.Desc)
+                {
+                    _doNotSync.Sort((s1, s2) => -1 * comparison(s1, s2));
+                }
+                else
+                {
+                    _doNotSync.Sort(comparison);
+                }
+            }
+        }
+    }
+
+    private List<BambooHREmployeeRecord> _sync = null;
+    private string _syncFilter = "WorkEmail";
+    private string _syncFilterLabel = "Filter by employee email";
+
+    void SortSyncData(MatSortChangedEvent sort)
+    {
+        if (!(sort == null || sort.Direction == MatSortDirection.None || string.IsNullOrEmpty(sort.SortId)))
+        {
+            Comparison<BambooHREmployeeRecord> comparison = null;
+            switch (sort.SortId)
+            {
+                case "email":
+                    _syncFilter = "WorkEmail";
+                    _syncFilterLabel = "Filter by employee email";
+
+                    comparison = (s1, s2) => string.Compare(s1.WorkEmail, s2.WorkEmail, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+
+                case "firstName":
+                    _syncFilter = "FirstName";
+                    _syncFilterLabel = "Filter by employee name";
+
+                    comparison = (s1, s2) => string.Compare(s1.FirstName, s2.FirstName, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+
+                case "lastName":
+                    _syncFilter = "LastName";
+                    _syncFilterLabel = "Filter by employee surname";
+
+                    comparison = (s1, s2) => string.Compare(s1.LastName, s2.LastName, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+
+                case "location":
+                    _syncFilter = "Location";
+                    _syncFilterLabel = "Filter by employee location";
+
+                    comparison = (s1, s2) => string.Compare(s1.Location, s2.Location, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+
+                case "department":
+                    _syncFilter = "Department";
+                    _syncFilterLabel = "Filter by employee department";
+
+                    comparison = (s1, s2) => string.Compare(s1.Department, s2.Department, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+            }
+
+            if (comparison != null)
+            {
+                if (sort.Direction == MatSortDirection.Desc)
+                {
+                    _sync.Sort((s1, s2) => -1 * comparison(s1, s2));
+                }
+                else
+                {
+                    _sync.Sort(comparison);
+                }
+            }
+        }
+    }
+
+    protected void DoSync(BambooHREmployeeRecord record)
+    {
+        var repo = new UsersRepository();
+        var user = repo.Users.Where(u => u.Id == Int32.Parse(record.Id)).FirstOrDefault();
+        if (user != null)
+        {
+            user.IsExternallySynchronized = true;
+            user.DoNotSync = false;
+            user.WasDeleted = false;
+            repo.Update<User>(user);
+            repo.SaveChanges();
+
+            _sync.Add(record);
+            _doNotSync.Remove(record);
+            _stagingModel.Records.Remove(record);
+        }
+    }
+
+    protected void DoRemove(BambooHREmployeeRecord record)
+    {
+        var repo = new UsersRepository();
+        var user = repo.Users.Where(u => u.Id == Int32.Parse(record.Id)).FirstOrDefault();
+        if (user != null)
+        {
+            user.IsExternallySynchronized = true;
+            user.DoNotSync = true;
+            user.WasDeleted = true;
+            repo.Update<User>(user);
+            repo.SaveChanges();
+
+            _sync.Remove(record);
+            _doNotSync.Add(record);
+            _stagingModel.Records.Remove(record);
+        }
+    }
+
+    protected void DoShowHistory(BambooHREmployeeRecord record)
+    {
+        _showHistoryForRecord = record;
+    }
+
+    protected void DoForceRefresh()
+    {
+        BambooHRSync.ForceRefresh();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private Action _action1;
+    private Action _action2;
+    protected override void OnInitialized()
+    {
+        if (!httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+        {
+            //NavigationManager.NavigateTo("/login", true);
+            //return;
+        }
+
+        base.OnInitialized();
+
+        if (_stagingModel == null)
+        {
+            _stagingModel = new MainLayoutStaging();
+            _doNotSync = new List<BambooHREmployeeRecord>();
+            _sync = new List<BambooHREmployeeRecord>();
+            _action1 = () =>
+            {
+                _loading = true;
+                InvokeAsync(StateHasChanged);
+            };
+            BambooHRSync.AddAction(_action1);
+
+            _action2 = () => Task.Run(() =>
+            {
+                {
+                    _stagingModel.Load();
+
+                    var repo = new UsersRepository();
+
+                    _sync = repo.Participations
+                        .Include(p => p.User)
+                        .Include(p => p.Team)
+                        .Where(p => p.Team.Id == BambooHRSync.TeamId && p.User.IsExternallySynchronized && !p.User.DoNotSync)
+                        .Select(p => BambooHREmployeeRecord.FromUser(p.User)).ToList();
+
+                    _doNotSync = repo.Participations
+                        .Include(p => p.User)
+                        .Include(p => p.Team)
+                        .Where(p => p.Team.Id == BambooHRSync.TeamId && p.User.IsExternallySynchronized && p.User.DoNotSync)
+                        .Select(p => BambooHREmployeeRecord.FromUser(p.User)).ToList();
+
+                    _loading = false;
+                    InvokeAsync(StateHasChanged);
+                };
+            });
+
+            BambooHRSync.AddAction(_action2);
+            _action2.Invoke();
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        BambooHRSync.RemoveAction(_action1);
+        BambooHRSync.RemoveAction(_action2);
+    }
+}

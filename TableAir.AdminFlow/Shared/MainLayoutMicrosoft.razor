@@ -1,0 +1,490 @@
+﻿@implements IDisposable
+@inherits LayoutComponentBase
+@inject IHttpContextAccessor httpContextAccessor
+@inject NavigationManager NavigationManager
+
+<MatAppBarContainer>
+    <MatAppBar Fixed="true">
+        <MatAppBarRow>
+            <MatAppBarSection>
+                <MatAppBarTitle>Microsoft sync integration panel</MatAppBarTitle>
+            </MatAppBarSection>
+            <MatAppBarSection Align="@MatAppBarSectionAlign.End">
+                @if (MicrosoftSync.IsSyncing)
+                {
+                    <h6 style="white-space: nowrap; text-align: right">Syncing users from Microsoft<br />@SyncPoints</h6>
+                }
+                else if (!_loading)
+                {System.Console.WriteLine("dadadad12");
+                    if (MicrosoftSync.TheresNoTeamLink)
+                    {
+                        <MatButton Raised="true" Style="white-space: nowrap" OnClick="() => DoTeamLink()">Establish Microsoft AAD/Microsoft 365 link</MatButton>
+                    }
+                    else
+                    {
+                        <MatButton Raised="true" Style="white-space: nowrap" OnClick="() => DoForceRefresh()">Force sync users</MatButton>
+                    }
+                }
+            </MatAppBarSection>
+            @*<MatAppBarSection Align="@MatAppBarSectionAlign.End">
+                <Login />
+            </MatAppBarSection>*@
+        </MatAppBarRow>
+    </MatAppBar>
+
+    <MatAppBarContent>
+        <div style="margin: 5px">
+            <MatCheckbox @bind-Value="@_showNotInGroup" Label="Also show users not in GG_Tableair_SyncGroup"></MatCheckbox>
+            @if (StagingRecords.Count > 0)
+            {
+                <MatAccordion>
+                    <MatExpansionPanel Expanded="true">
+                        <MatExpansionPanelSummary>
+                            <MatExpansionPanelHeader>
+                                <b>Users in review (@(StagingRecords.Count))</b>
+                            </MatExpansionPanelHeader>
+                        </MatExpansionPanelSummary>
+                        <MatExpansionPanelDetails>
+                            @if (_loading)
+                            {
+                                <MatProgressCircle Indeterminate="true" Size="MatProgressCircleSize.Medium" /><br />
+                            }
+                            <MatTable Items="@StagingRecords" AllowSelection="false"
+                                        FilterByColumnName="@_stagingModel.Filter" SearchTermFieldPlaceHolder="" SearchTermFieldLabel="@_stagingModel.FilterLabel"
+                                        DebounceMilliseconds="300" ShowPaging="true" PageSize="5" UseSortHeaderRow="true">
+                                <MatTableHeader>
+                                    <MatSortHeaderRow SortChanged="@_stagingModel.Sort" @bind-Direction="_stagingModel.SortDirection">
+                                        <MatSortHeader SortId="email">Email</MatSortHeader>
+                                        <MatSortHeader SortId="firstName">First&nbsp;name</MatSortHeader>
+                                        <MatSortHeader SortId="lastName">Last&nbsp;name</MatSortHeader>
+                                        <MatSortHeader Style="width: 50%">Groups</MatSortHeader>
+                                        <MatSortHeader Style="width: 50%">Actions</MatSortHeader>
+                                    </MatSortHeaderRow>
+                                </MatTableHeader>
+                                <MatTableRow>
+                                    <td>@context.WorkEmail</td>
+                                    <td>@context.FirstName</td>
+                                    <td>@context.LastName</td>
+                                    <td>@context.GroupsList</td>
+                                    <td>
+                                        <MatButton Outlined="true" Style="white-space: nowrap" OnClick="() => DoSync(context)">Confirm</MatButton>
+                                        <MatButton Outlined="true" Style="white-space: nowrap" OnClick="() => DoRemove(context)">Remove from the team</MatButton>
+                                    </td>
+                                </MatTableRow>
+                            </MatTable>
+                        </MatExpansionPanelDetails>
+                    </MatExpansionPanel>
+                </MatAccordion>
+            }
+
+            <MatDialog @bind-IsOpen="@_doShowHistory" CanBeClosed="false">
+                <MatDialogTitle>Sync history</MatDialogTitle>
+                <MatDialogContent>
+                    <MatTable Items="@_showHistoryForRecord.History" PageRecordCountLabel="">
+                        <MatTableHeader>
+                            <th>Date/Time</th>
+                            <th style="width: 100%">Event</th>
+                        </MatTableHeader>
+                        <MatTableRow>
+                            <td style="white-space: nowrap">@context.Item1.ToString("u").Substring(0, 19)</td>
+                            <td>@context.Item2</td>
+                        </MatTableRow>
+                    </MatTable>
+                </MatDialogContent>
+                <MatDialogActions>
+                    <MatButton OnClick="@(e => { _showHistoryForRecord = _doNotShowHistory; })">Close</MatButton>
+                </MatDialogActions>
+            </MatDialog>
+
+            <MatAccordion>
+                <MatExpansionPanel>
+                    <MatExpansionPanelSummary>
+                        <MatExpansionPanelHeader>
+                            <b>Confirmed users (@(SyncRecords.Count()))</b>
+                        </MatExpansionPanelHeader>
+                    </MatExpansionPanelSummary>
+                    <MatExpansionPanelDetails>
+                        <MatTable Items="@SyncRecords" AllowSelection="false"
+                                    FilterByColumnName="@_syncFilter" SearchTermFieldPlaceHolder="" SearchTermFieldLabel="@_syncFilterLabel"
+                                    DebounceMilliseconds="300" ShowPaging="true" PageSize="10" UseSortHeaderRow="true">
+                            <MatTableHeader>
+                                <MatSortHeaderRow SortChanged="@SortSyncData">
+                                    <MatSortHeader SortId="email">Email</MatSortHeader>
+                                    <MatSortHeader SortId="firstName">First&nbsp;name</MatSortHeader>
+                                    <MatSortHeader SortId="lastName">Last&nbsp;name</MatSortHeader>
+                                    <MatSortHeader Style="width: 50%">Groups</MatSortHeader>
+                                    <MatSortHeader Style="width: 50%">Actions</MatSortHeader>
+                                </MatSortHeaderRow>
+                            </MatTableHeader>
+                            <MatTableRow>
+                                <td>@context.WorkEmail</td>
+                                <td>@context.FirstName</td>
+                                <td>@context.LastName</td>
+                                <td>@context.GroupsList</td>
+                                <td>
+                                    <MatButton Outlined="true" Style="white-space: nowrap" OnClick="() => DoShowHistory(context)">User history</MatButton>
+                                    <MatButton Outlined="true" Style="white-space: nowrap" OnClick="() => DoRemove(context)">Remove from the team</MatButton>
+                                    <!--<MatButton Outlined="true" Style="white-space: nowrap">Repeat invitation email</MatButton>-->
+                                </td>
+                            </MatTableRow>
+                        </MatTable>
+                    </MatExpansionPanelDetails>
+                </MatExpansionPanel>
+                <MatExpansionPanel>
+                    <MatExpansionPanelSummary>
+                        <MatExpansionPanelHeader>
+                            <b>Disabled users (@(DoNotSyncRecords.Count()))</b>
+                        </MatExpansionPanelHeader>
+                    </MatExpansionPanelSummary>
+                    <MatExpansionPanelDetails>
+                        <MatTable Items="@DoNotSyncRecords" AllowSelection="false"
+                                    FilterByColumnName="@_doNotSyncFilter" SearchTermFieldPlaceHolder="" SearchTermFieldLabel="@_doNotSyncFilterLabel"
+                                    DebounceMilliseconds="300" ShowPaging="true" PageSize="10" UseSortHeaderRow="true">
+                            <MatTableHeader>
+                                <MatSortHeaderRow SortChanged="@SortDoNotSyncData">
+                                    <MatSortHeader SortId="email">Email</MatSortHeader>
+                                    <MatSortHeader SortId="firstName">First&nbsp;name</MatSortHeader>
+                                    <MatSortHeader SortId="lastName">Last&nbsp;name</MatSortHeader>
+                                    <MatSortHeader Style="width: 50%">GroupsList</MatSortHeader>
+                                    <MatSortHeader Style="width: 50%">Actions</MatSortHeader>
+                                </MatSortHeaderRow>
+                            </MatTableHeader>
+                            <MatTableRow>
+                                <td>@context.WorkEmail</td>
+                                <td>@context.FirstName</td>
+                                <td>@context.LastName</td>
+                                <td>@context.GroupsList</td>
+                                <td><MatButton Outlined="true" Style="white-space: nowrap" OnClick="() => DoSync(context)">Sync</MatButton></td>
+                            </MatTableRow>
+                        </MatTable>
+                    </MatExpansionPanelDetails>
+                </MatExpansionPanel>
+                @*<MatExpansionPanel>
+                <MatExpansionPanelSummary>
+                    <MatExpansionPanelHeader>
+                        <b>Email preferences</b>
+                    </MatExpansionPanelHeader>
+                </MatExpansionPanelSummary>
+                <MatExpansionPanelDetails>
+                    <MatButton Type="submit" Raised="true">Save email preferences</MatButton>
+                    <br />
+                    <br />
+                    <h6>Integrations admin email</h6>
+                    <MatTextField @bind-Value="@AdminEmail" FullWidth="true"></MatTextField>
+                    <br />
+                    <h6>Invitation email subject</h6>
+                    <MatTextField @bind-Value="@EmailSubject" FullWidth="true"></MatTextField>
+                    <br />
+                    <h6>Invitation email template</h6>
+                    <MatTextField TextArea="true" Box="true" @bind-Value="@EmailTemplate" FullWidth="true" Style="height: 240px"></MatTextField>
+                </MatExpansionPanelDetails>
+            </MatExpansionPanel>*@
+            </MatAccordion>
+        </div>
+    </MatAppBarContent>
+</MatAppBarContainer>
+
+@code {
+    private bool _showNotInGroup;
+
+    public string AdminEmail = "info@tableair.com";
+    public string EmailSubject = @"Welcome to TableAir";
+    public string EmailTemplate = @"Dear {FirstName} {LastName},
+
+We have added your account to TableAir system, for hot desk booking. Please set-up your password there: {TableAirUrl}
+
+Yours,
+HR departament";
+
+    private static EmployeeRecord _doNotShowHistory = new EmployeeRecord();
+
+    public List<EmployeeRecord> StagingRecords
+    {
+        get
+        {
+            return _showNotInGroup ? _stagingModel.Records : _stagingModel.Records.Where(r => r.Groups.Any(g => g.ToLowerInvariant() == "gg_tableair_syncgroup")).ToList();
+        }
+        set
+        {
+        }
+    }
+
+    public List<EmployeeRecord> SyncRecords
+    {
+        get
+        {
+            return _showNotInGroup ? _sync : _sync.Where(r => r.Groups.Any(g => g.ToLowerInvariant() == "gg_tableair_syncgroup")).ToList();
+        }
+        set
+        {
+        }
+    }
+
+    public List<EmployeeRecord> DoNotSyncRecords
+    {
+        get
+        {
+            return _showNotInGroup ? _doNotSync : _doNotSync.Where(r => r.Groups.Any(g => g.ToLowerInvariant() == "gg_tableair_syncgroup")).ToList();
+        }
+        set
+        {
+        }
+    }
+
+
+    private EmployeeRecord _showHistoryForRecord = _doNotShowHistory;
+    private bool _doShowHistory { get => _showHistoryForRecord != _doNotShowHistory; set { } }
+    private bool _loading = true;
+    private int _syncPointsCount = 3;
+    private string SyncPoints
+    {
+        get
+        {
+            var points = "";
+            for (var i = 0; i < _syncPointsCount; i++)
+            {
+                points += ".";
+            }
+
+            Task.Run(() =>
+            {
+                System.Threading.Thread.Sleep(1000);
+
+                if (_syncPointsCount >= 3 || _syncPointsCount <= 0)
+                {
+                    _syncPointsCount = 1;
+                }
+                else
+                {
+                    _syncPointsCount++;
+                }
+                InvokeAsync(StateHasChanged);
+            });
+
+            return points;
+        }
+    }
+
+    private MainLayoutMicrosoftStaging _stagingModel;
+
+    private List<EmployeeRecord> _doNotSync = null;
+    private string _doNotSyncFilter = "WorkEmail";
+    private string _doNotSyncFilterLabel = "Filter by employee email";
+
+    void SortDoNotSyncData(MatSortChangedEvent sort)
+    {
+        if (!(sort == null || sort.Direction == MatSortDirection.None || string.IsNullOrEmpty(sort.SortId)))
+        {
+            Comparison<EmployeeRecord> comparison = null;
+            switch (sort.SortId)
+            {
+                case "email":
+                    _doNotSyncFilter = "WorkEmail";
+                    _doNotSyncFilterLabel = "Filter by employee email";
+
+                    comparison = (s1, s2) => string.Compare(s1.WorkEmail, s2.WorkEmail, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+
+                case "firstName":
+                    _doNotSyncFilter = "FirstName";
+                    _doNotSyncFilterLabel = "Filter by employee name";
+
+                    comparison = (s1, s2) => string.Compare(s1.FirstName, s2.FirstName, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+
+                case "lastName":
+                    _doNotSyncFilter = "LastName";
+                    _doNotSyncFilterLabel = "Filter by employee surname";
+
+                    comparison = (s1, s2) => string.Compare(s1.LastName, s2.LastName, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+            }
+
+            if (comparison != null)
+            {
+                if (sort.Direction == MatSortDirection.Desc)
+                {
+                    _doNotSync.Sort((s1, s2) => -1 * comparison(s1, s2));
+                }
+                else
+                {
+                    _doNotSync.Sort(comparison);
+                }
+            }
+        }
+    }
+
+    private List<EmployeeRecord> _sync = null;
+    private string _syncFilter = "WorkEmail";
+    private string _syncFilterLabel = "Filter by employee email";
+
+    void SortSyncData(MatSortChangedEvent sort)
+    {
+        if (!(sort == null || sort.Direction == MatSortDirection.None || string.IsNullOrEmpty(sort.SortId)))
+        {
+            Comparison<EmployeeRecord> comparison = null;
+            switch (sort.SortId)
+            {
+                case "email":
+                    _syncFilter = "WorkEmail";
+                    _syncFilterLabel = "Filter by employee email";
+
+                    comparison = (s1, s2) => string.Compare(s1.WorkEmail, s2.WorkEmail, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+
+                case "firstName":
+                    _syncFilter = "FirstName";
+                    _syncFilterLabel = "Filter by employee name";
+
+                    comparison = (s1, s2) => string.Compare(s1.FirstName, s2.FirstName, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+
+                case "lastName":
+                    _syncFilter = "LastName";
+                    _syncFilterLabel = "Filter by employee surname";
+
+                    comparison = (s1, s2) => string.Compare(s1.LastName, s2.LastName, StringComparison.InvariantCultureIgnoreCase);
+                    break;
+            }
+
+            if (comparison != null)
+            {
+                if (sort.Direction == MatSortDirection.Desc)
+                {
+                    _sync.Sort((s1, s2) => -1 * comparison(s1, s2));
+                }
+                else
+                {
+                    _sync.Sort(comparison);
+                }
+            }
+        }
+    }
+
+    protected void DoSync(EmployeeRecord record)
+    {
+        var repo = new UsersRepository();
+        var user = repo.Users.Where(u => u.Id == Int32.Parse(record.Id)).FirstOrDefault();
+        if (user != null)
+        {
+            user.IsExternallySynchronized = true;
+            user.DoNotSync = false;
+            user.WasDeleted = false;
+            repo.Update<User>(user);
+            repo.SaveChanges();
+
+            _sync.Add(record);
+            _doNotSync.Remove(record);
+            _stagingModel.Records.Remove(record);
+        }
+    }
+
+    protected void DoRemove(EmployeeRecord record)
+    {
+        var repo = new UsersRepository();
+        var user = repo.Users.Where(u => u.Id == Int32.Parse(record.Id)).FirstOrDefault();
+        if (user != null)
+        {
+            user.IsExternallySynchronized = true;
+            user.DoNotSync = true;
+            user.WasDeleted = true;
+            repo.Update<User>(user);
+            repo.SaveChanges();
+
+            _sync.Remove(record);
+            _doNotSync.Add(record);
+            _stagingModel.Records.Remove(record);
+        }
+    }
+
+    protected void DoShowHistory(EmployeeRecord record)
+    {
+        _showHistoryForRecord = record;
+    }
+
+    protected void DoForceRefresh()
+    {
+        MicrosoftSync.ForceRefresh();
+        InvokeAsync(StateHasChanged);
+    }
+
+    protected void DoTeamLink()
+    {
+        @* NavigationManager.NavigateTo("https://login.microsoftonline.com/common/adminconsent?client_id=f9608059-9663-45e5-9443-80758949db58&redirect_uri=" + NavigationManager.BaseUri.Trim(new[] { '/' }) + "/adminconsentcallback", true); *@
+        @* NavigationManager.NavigateTo("https://login.microsoftonline.com/common/adminconsent?client_id=41eb7b93-fdaf-44db-9819-30003a13d433&redirect_uri=" + NavigationManager.BaseUri.Trim(new[] { '/' }) + "/adminconsentcallback", true); *@
+        // dev 
+        @* NavigationManager.NavigateTo("https://login.microsoftonline.com/common/adminconsent?client_id=a2920437-2703-4699-92a4-f6e5a6429df9&redirect_uri=" + NavigationManager.BaseUri.Trim(new[] { '/' }) + "/adminconsentcallback", true); *@
+        // prod
+        NavigationManager.NavigateTo("https://login.microsoftonline.com/common/adminconsent?client_id=c2c3392c-9323-4f02-b831-dd22d285901d&redirect_uri=" + NavigationManager.BaseUri.Trim(new[] { '/' }) + "/adminconsentcallback", true);
+
+    }
+
+    private Action _action1;
+    private Action _action2;
+    protected override void OnInitialized()
+    {
+        if (!httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo($"/{MicrosoftSync.TeamUrl}/login", true);
+            return;
+        }
+        else
+        {
+            var identity = httpContextAccessor.HttpContext.User.Identity;
+        }
+
+        base.OnInitialized();
+
+        if (_stagingModel == null)
+        {
+            _stagingModel = new MainLayoutMicrosoftStaging();
+            _doNotSync = new List<EmployeeRecord>();
+            _sync = new List<EmployeeRecord>();
+            _action1 = () =>
+            {
+                _loading = true;
+                InvokeAsync(StateHasChanged);
+            };
+            MicrosoftSync.AddAction(_action1);
+
+            _action2 = () => Task.Run(() =>
+            {
+                {
+                    _stagingModel.Load();
+
+                    var repo = new UsersRepository();
+
+                    _sync = repo.Participations
+                        .Include(p => p.User)
+                        .Include(p => p.Team)
+                        .Where(p => p.Team.Id == MicrosoftSync.TeamId && p.User.IsExternallySynchronized && !p.User.DoNotSync)
+                        .Select(p => EmployeeRecord.FromUser(p.User)).ToList();
+
+                    _doNotSync = repo.Participations
+                        .Include(p => p.User)
+                        .Include(p => p.Team)
+                        .Where(p => p.Team.Id == MicrosoftSync.TeamId && p.User.IsExternallySynchronized && p.User.DoNotSync)
+                        .Select(p => EmployeeRecord.FromUser(p.User)).ToList();
+
+                    _loading = false;
+                    InvokeAsync(StateHasChanged);
+                };
+            });
+
+            MicrosoftSync.AddAction(_action2);
+            _action2.Invoke();
+
+            if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query).TryGetValue("refresh", out var qRefresh) && Convert.ToBoolean(qRefresh))
+            {
+                MicrosoftSync.ForceRefresh();
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        MicrosoftSync.RemoveAction(_action1);
+        MicrosoftSync.RemoveAction(_action2);
+    }
+}

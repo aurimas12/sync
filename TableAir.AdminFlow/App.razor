@@ -1,0 +1,27 @@
+@inject NavigationManager NavigationManager
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(Program).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayoutMicrosoft)">
+                <NotAuthorized>
+                    @{
+                        var returnUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+                        NavigationManager.NavigateTo($"login?redirectUri={returnUrl}", forceLoad: true);
+                    }
+                </NotAuthorized>
+                <Authorizing>
+                    Wait...
+                </Authorizing>
+            </AuthorizeRouteView>
+        </Found>
+        <NotFound>
+
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p>Sorry, there's nothing here.</p>
+            </LayoutView>
+
+        </NotFound>
+
+    </Router>
+</CascadingAuthenticationState>
