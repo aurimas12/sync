@@ -24,10 +24,10 @@ namespace TableAir.AdminFlow.Pages
                 Team = team,
                 Provider = 4,
                 ExternalId = Request.Query["tenant"].ToString(),
-                // Properties = "{\"sync_client\": \"a2920437-2703-4699-92a4-f6e5a6429df9\", \"initial_sync_params\": {\"import_users\": true}}", //dev
-                Properties = "{\"sync_client\": \"c2c3392c-9323-4f02-b831-dd22d285901d\", \"initial_sync_params\": {\"import_users\": true}}", //prod
+                Properties = "{\"sync_client\": \"a2920437-2703-4699-92a4-f6e5a6429df9\", \"initial_sync_params\": {\"import_users\": true}}", //dev
+                // Properties = "{\"sync_client\": \"c2c3392c-9323-4f02-b831-dd22d285901d\", \"initial_sync_params\": {\"import_users\": true}}", //prod
                 UseCron = false,
-            });System.Console.WriteLine("dfasdfds");
+            });
             repo.SaveChanges();
 
             Response.Redirect($"/{MicrosoftSync.TeamUrl}/?refresh=true", true);
