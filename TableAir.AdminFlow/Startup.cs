@@ -66,8 +66,8 @@ namespace TableAir.AdminFlow
                         // dev
                         AuthorizationEndpoint = "http://api.tableair.org/o/authorize/",
                         TokenEndpoint = "http://api.tableair.org/o/token/",
-                        UserInfoEndpoint = "http://api.tableair.org/o/userinfo",
-                        Issuer = "http://api.tableair.org/o",
+                        UserInfoEndpoint = "http://api.tableair.org/o/userinfo/",
+                        Issuer = "http://api.tableair.org/o/",
                     };
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
