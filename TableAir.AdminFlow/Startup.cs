@@ -86,10 +86,10 @@ n: ""3Dzq5xtKNmH79W4JQ8nKeE-RegQ6OpZqTG7bfWHkafBVgz9WE8YFozGGKc9k1RaGzkTuS02IyFN
                         ValidateIssuer = false,
                     };
                     
-                    // options.ClientId = "YrvOOOi6LpakcgFJZ3IuLMvuuzBfdbAn6pC5Hvvx";//dev
-                    options.ClientId = "FZaWN7TnILftKTLUC6vbvenxaoLjrodVxpduT3MM";//prod
-                    // options.ClientSecret = "s1lIItbKYPxxncPMApP6cwb2QBV5t3HDx6JDB4xjWOtBQ1LfjzmDyZLzivZXtnrX4UVCNUm51cyLup5B3kZZ6ECAn9rxHUUNAQMlA46hahrPd6KwvJrZYTxoQh9gqH1B"; //dev
-                    options.ClientSecret = "0QcVeIod1NC8ctIgbeRzFO9geVoIoOf1OasMZSzIOEWm3Qwa9eDO1b44dqhuCF1dYSSTSC14900K1FPjkYHTDDul7asStg1Z9wkcVJs75zr2NbeJ9y5B9qAhE2xGaLiF";//prod
+                    options.ClientId = "YrvOOOi6LpakcgFJZ3IuLMvuuzBfdbAn6pC5Hvvx";//dev
+                    // options.ClientId = "FZaWN7TnILftKTLUC6vbvenxaoLjrodVxpduT3MM";//prod
+                    options.ClientSecret = "s1lIItbKYPxxncPMApP6cwb2QBV5t3HDx6JDB4xjWOtBQ1LfjzmDyZLzivZXtnrX4UVCNUm51cyLup5B3kZZ6ECAn9rxHUUNAQMlA46hahrPd6KwvJrZYTxoQh9gqH1B"; //dev
+                    // options.ClientSecret = "0QcVeIod1NC8ctIgbeRzFO9geVoIoOf1OasMZSzIOEWm3Qwa9eDO1b44dqhuCF1dYSSTSC14900K1FPjkYHTDDul7asStg1Z9wkcVJs75zr2NbeJ9y5B9qAhE2xGaLiF";//prod
                     options.ResponseType = OpenIdConnectResponseType.Code;
                     options.UseTokenLifetime = false;
                     options.RequireHttpsMetadata = false;
@@ -115,7 +115,7 @@ n: ""3Dzq5xtKNmH79W4JQ8nKeE-RegQ6OpZqTG7bfWHkafBVgz9WE8YFozGGKc9k1RaGzkTuS02IyFN
                     };
                 });
 
-            // Server Side Blazor doesn't register HttpClient by default
+// //             // Server Side Blazor doesn't register HttpClient by default
             if (!services.Any(x => x.ServiceType == typeof(HttpClient)))
             {
                 // Setup HttpClient for server side in a client side compatible fashion
