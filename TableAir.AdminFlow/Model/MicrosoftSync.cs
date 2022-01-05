@@ -77,13 +77,13 @@ namespace TableAir.AdminFlow.Model
         //public static readonly string TeamUrl = "tableair";
 
         // // // dev team
-        public static readonly int TeamId = 1; //dev team id 
-        public static readonly string TeamUrl = "company"; //prod team name
+        // public static readonly int TeamId = 1; //dev team id 
+        // public static readonly string TeamUrl = "company"; //prod team name
 
 
         // prod team
-        // public static readonly int TeamId = 3; //prod team id
-        // public static readonly string TeamUrl = "devsync"; //prod team name
+        public static readonly int TeamId = 3; //prod team id
+        public static readonly string TeamUrl = "devsync"; //prod team name
 
 
         private static CancellationTokenSource _ctsSleep = new CancellationTokenSource();
@@ -156,8 +156,8 @@ namespace TableAir.AdminFlow.Model
                     string clientProdId="c2c3392c-9323-4f02-b831-dd22d285901d";
                     string clientProdSecretValue="hYo7Q~S0WuJK_.IVJEqzo7KW1xagi6ZvObCC0";
                     
-                    var confidentialClientApplication = ConfidentialClientApplicationBuilder.Create(clientDevId) //client id
-                                                              .WithClientSecret(clientDevSecretValue) //client secret value
+                    var confidentialClientApplication = ConfidentialClientApplicationBuilder.Create(clientProdId) //client id
+                                                              .WithClientSecret(clientProdSecretValue) //client secret value
                                                             
                                                               .WithAuthority(new Uri("https://login.microsoftonline.com/" + teamLink.ExternalId))
                                                               .Build();
