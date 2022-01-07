@@ -6,9 +6,9 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
-COPY ["TableAir.AdminFlow/TableAir.AdminFlow.csproj", "TableAir.AdminFlow/"]
+COPY ["TableAir.AdminFlow.csproj", "TableAir.AdminFlow/"]
 RUN dotnet restore "TableAir.AdminFlow/TableAir.AdminFlow.csproj"
-COPY . .
+COPY . TableAir.AdminFlow
 WORKDIR "/src/TableAir.AdminFlow"
 RUN dotnet build "TableAir.AdminFlow.csproj" -c Release -o /app/build
 
