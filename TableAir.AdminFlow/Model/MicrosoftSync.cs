@@ -125,7 +125,7 @@ namespace TableAir.AdminFlow.Model
                 {
                     var repo = new UsersRepository();
                     var teamLink = repo.ExternalLinks.Include(el => el.Team).Where(el => el.Team.Id == TeamId && el.Provider == 4).FirstOrDefault();
-
+             
                     if (teamLink == null)
                     {
                         TheresNoTeamLink = true;

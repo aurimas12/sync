@@ -189,7 +189,7 @@ namespace TableAir.AdminFlow.Model
         public DbSet<TeamGroupPermissions> TeamGroupsPermissions { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-         => optionsBuilder.UseNpgsql("Host=localhost;Database=postgres;Username=postgres;Password=jv06kgus");
+         => optionsBuilder.UseNpgsql("Host=localhost;Database=postgres;Port=5432;Username=postgres;Password=jv06kgus");
          //=> optionsBuilder.UseNpgsql("Host=localhost;Database=ebdb;Username=postgres;Password=Vakare_234");
     }
 }
