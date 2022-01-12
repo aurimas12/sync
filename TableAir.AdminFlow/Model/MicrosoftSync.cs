@@ -125,9 +125,9 @@ namespace TableAir.AdminFlow.Model
                 {
                     var repo = new UsersRepository();
                     var teamLink = repo.ExternalLinks.Include(el => el.Team).Where(el => el.Team.Id == TeamId && el.Provider == 4).FirstOrDefault();
-             
                     if (teamLink == null)
                     {
+                        
                         TheresNoTeamLink = true;
 
                         IsSyncing = false;
@@ -160,6 +160,7 @@ namespace TableAir.AdminFlow.Model
                                                               .WithClientSecret(clientDevSecretValue) //client secret value
                                                             
                                                               .WithAuthority(new Uri("https://login.microsoftonline.com/" + teamLink.ExternalId))
+                                                            //   .WithAuthority(new Uri("https://login.microsoftonline.com/" + "company"))
                                                               .Build();
                     var graphHttpClient = GraphClientFactory.Create(new ClientCredentialProvider(confidentialClientApplication));
                     var graphClient = new GraphServiceClient(graphHttpClient);

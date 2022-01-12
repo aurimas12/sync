@@ -1,11 +1,26 @@
-version: '3.4'
+version: '3'
 
 services:
   blazorserver:
     image: blazorserver
+    depends_on: 
+      - "postgres"
     build:
       context: .
       dockerfile: Dockerfile
+    environment: 
+      - ASPNETCORE_ENVIRONMENT='Development'
     ports:
       - 7080:80
       # - 7443:443
+  postgres:
+    image: "postgres"
+    container_name: "postgres"
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=jv06kgus
+      - POSTGRES_DB=postgres
+    expose: 
+      - "5432"
+
