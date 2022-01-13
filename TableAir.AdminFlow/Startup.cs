@@ -60,8 +60,8 @@ namespace TableAir.AdminFlow
                         // prod
                         AuthorizationEndpoint = "https://api.tableair.lt/o/authorize/",
                         TokenEndpoint = "https://api.tableair.lt/o/token/",
-                        UserInfoEndpoint = "https://api.tableair.lt/o/userinfo",
-                        Issuer = "https://api.tableair.lt/o",
+                        UserInfoEndpoint = "https://api.tableair.lt/o/userinfo/",
+                        Issuer = "https://api.tableair.lt/o/",
 
                         // dev
                         // AuthorizationEndpoint = "http://api.tableair.org/o/authorize/",

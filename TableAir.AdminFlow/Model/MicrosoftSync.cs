@@ -82,7 +82,7 @@ namespace TableAir.AdminFlow.Model
 
 
         // prod team
-        public static readonly int TeamId = 3; //prod team id
+        public static readonly int TeamId = 49; //prod team id
         public static readonly string TeamUrl = "devsync"; //prod team name
 
 
