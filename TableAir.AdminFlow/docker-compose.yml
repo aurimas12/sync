@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  blazorserver:
+    image: blazorserver
+    depends_on: 
+      - "postgres"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment: 
+      - ASPNETCORE_ENVIRONMENT='Development'
+    ports:
+      - 7080:80
