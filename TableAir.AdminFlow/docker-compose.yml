@@ -3,8 +3,8 @@ version: '3'
 services:
   blazorserver:
     image: blazorserver
-    depends_on: 
-      - "postgres"
+    # depends_on: 
+    #   - "postgres"
     build:
       context: .
       dockerfile: Dockerfile
