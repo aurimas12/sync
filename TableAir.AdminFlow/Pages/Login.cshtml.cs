@@ -11,7 +11,7 @@ namespace TableAir.AdminFlow.Pages
     public class LoginModel : PageModel
     {
         public async Task OnGet(string redirectUri)
-        {
+        {   System.Console.WriteLine("fdsfg " + MicrosoftSync.TeamId);
             System.Console.WriteLine("sfsdf"+ Request.Query["tenant"].ToString() + "sss");
             await HttpContext.ChallengeAsync("oidc", new AuthenticationProperties { RedirectUri = redirectUri ?? $"/{MicrosoftSync.TeamUrl}" });
         }

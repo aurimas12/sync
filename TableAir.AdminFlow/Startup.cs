@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Collections;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -134,10 +137,52 @@ n: ""3Dzq5xtKNmH79W4JQ8nKeE-RegQ6OpZqTG7bfWHkafBVgz9WE8YFozGGKc9k1RaGzkTuS02IyFN
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+
+        public static class DotEnv
+        {
+            public static void Load(string filePath)
+            {
+                if (!File.Exists(filePath))
+                    return;
+
+                foreach (var line in File.ReadAllLines(filePath))
+                {
+                    var parts = line.Split(
+                        '=',
+                        StringSplitOptions.RemoveEmptyEntries);
+
+                    if (parts.Length != 2)
+                        continue;
+                    Environment.SetEnvironmentVariable(parts[0], parts[1]);
+                }
+            }
+        }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+
+            var root = Directory.GetCurrentDirectory();
+            var dotenv = Path.Combine(root, ".env");
+            DotEnv.Load(dotenv);
+
+            System.Console.WriteLine("1 " +Environment.GetEnvironmentVariable("TEAM_ID"));
+
+            
             if (env.IsDevelopment())
             {
+                System.Console.WriteLine(env.EnvironmentName);
+                MicrosoftSync.TeamId=Convert.ToInt32(Environment.GetEnvironmentVariable("TEAM_ID"));
+                app.UseDeveloperExceptionPage();
+            }
+
+            else if (env.IsStaging())
+            {
+                System.Console.WriteLine(env.EnvironmentName);
+                app.UseDeveloperExceptionPage();
+            }
+
+            else if (env.IsProduction())
+            {
+                System.Console.WriteLine(env.EnvironmentName);
                 app.UseDeveloperExceptionPage();
             }
             else
@@ -155,7 +200,8 @@ n: ""3Dzq5xtKNmH79W4JQ8nKeE-RegQ6OpZqTG7bfWHkafBVgz9WE8YFozGGKc9k1RaGzkTuS02IyFN
             app.UseAuthentication();
 
             app.UseAuthorization();
-
+            // env
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapBlazorHub();
