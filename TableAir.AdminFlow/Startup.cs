@@ -164,7 +164,7 @@ n: ""3Dzq5xtKNmH79W4JQ8nKeE-RegQ6OpZqTG7bfWHkafBVgz9WE8YFozGGKc9k1RaGzkTuS02IyFN
             var dotenv = Path.Combine(root, ".env");
             DotEnv.Load(dotenv);
 
-            System.Console.WriteLine("1 " +Environment.GetEnvironmentVariable("TEAM_ID"));
+            // System.Console.WriteLine("1 " +Environment.GetEnvironmentVariable("TEAM_ID"));
 
             
             if (env.IsDevelopment())

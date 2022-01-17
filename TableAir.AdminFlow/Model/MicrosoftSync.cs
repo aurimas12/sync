@@ -76,14 +76,11 @@ namespace TableAir.AdminFlow.Model
         //public static readonly int TeamId = 2;
         //public static readonly string TeamUrl = "tableair";
 
-        // // // dev team
-        public static int TeamId; //dev team id 
-        public static readonly string TeamUrl = "company"; //prod team name
+        public static int TeamId; 
+        public static readonly string TeamUrl = "company"; 
 
 
-        // prod team
-        // public static readonly int TeamId = 3; //prod team id
-        // public static readonly string TeamUrl = "devsync"; //prod team name
+
 
 
         private static CancellationTokenSource _ctsSleep = new CancellationTokenSource();
