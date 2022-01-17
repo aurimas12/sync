@@ -77,7 +77,7 @@ namespace TableAir.AdminFlow.Model
         //public static readonly string TeamUrl = "tableair";
 
         public static int TeamId; 
-        public static readonly string TeamUrl = "company"; 
+        public static readonly string TeamUrl = "demo12"; 
 
 
 
@@ -149,13 +149,12 @@ namespace TableAir.AdminFlow.Model
                     // dev app
                     string clientDevId="a2920437-2703-4699-92a4-f6e5a6429df9";
                     string clientDevSecretValue="zWc7Q~k30i5ZTJqMIWNR6fGEPZbiHS1pjx9FI";
-                    // prod app
+                    // prod app 
                     string clientProdId="c2c3392c-9323-4f02-b831-dd22d285901d";
                     string clientProdSecretValue="hYo7Q~S0WuJK_.IVJEqzo7KW1xagi6ZvObCC0";
-                    
-                    var confidentialClientApplication = ConfidentialClientApplicationBuilder.Create(clientDevId) //client id
-                                                              .WithClientSecret(clientDevSecretValue) //client secret value
-                                                            
+
+                    var confidentialClientApplication = ConfidentialClientApplicationBuilder.Create(clientProdId) //client id
+                                                              .WithClientSecret(clientProdSecretValue) //client secret value
                                                               .WithAuthority(new Uri("https://login.microsoftonline.com/" + teamLink.ExternalId))
                                                             //   .WithAuthority(new Uri("https://login.microsoftonline.com/" + "company"))
                                                               .Build();
