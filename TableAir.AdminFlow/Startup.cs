@@ -198,9 +198,9 @@ n: ""3Dzq5xtKNmH79W4JQ8nKeE-RegQ6OpZqTG7bfWHkafBVgz9WE8YFozGGKc9k1RaGzkTuS02IyFN
 
             app.UseRouting();
 
-            // app.UseAuthentication();
+            app.UseAuthentication();
 
-            // app.UseAuthorization();
+            app.UseAuthorization();
             // env
             
             app.UseEndpoints(endpoints =>

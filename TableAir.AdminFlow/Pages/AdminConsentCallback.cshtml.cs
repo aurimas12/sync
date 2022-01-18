@@ -24,9 +24,9 @@ namespace TableAir.AdminFlow.Pages
                 Team = team,
                 Provider = 4,
                 ExternalId = Request.Query["tenant"].ToString(),
-                Properties = "{\"sync_client\": \"41eb7b93-fdaf-44db-9819-30003a13d433\", \"initial_sync_params\": {\"import_users\": true}}",
+                // Properties = "{\"sync_client\": \"41eb7b93-fdaf-44db-9819-30003a13d433\", \"initial_sync_params\": {\"import_users\": true}}",
                 // Properties = "{\"sync_client\": \"a2920437-2703-4699-92a4-f6e5a6429df9\", \"initial_sync_params\": {\"import_users\": true}}", //dev
-                // Properties = "{\"sync_client\": \"c2c3392c-9323-4f02-b831-dd22d285901d\", \"initial_sync_params\": {\"import_users\": true}}", //prod
+                Properties = "{\"sync_client\": \"c2c3392c-9323-4f02-b831-dd22d285901d\", \"initial_sync_params\": {\"import_users\": true}}", //prod
                 UseCron = false,
             });
             repo.SaveChanges();

@@ -76,8 +76,8 @@ namespace TableAir.AdminFlow.Model
         //public static readonly int TeamId = 2;
         //public static readonly string TeamUrl = "tableair";
 
-        public static int TeamId; 
-        public static readonly string TeamUrl = "demo12"; 
+        public static int TeamId;
+        public static readonly string TeamUrl = "c1"; 
 
 
 
