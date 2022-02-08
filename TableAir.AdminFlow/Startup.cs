@@ -165,13 +165,22 @@ n: ""3Dzq5xtKNmH79W4JQ8nKeE-RegQ6OpZqTG7bfWHkafBVgz9WE8YFozGGKc9k1RaGzkTuS02IyFN
             var dotenv = Path.Combine(root, ".env");
             DotEnv.Load(dotenv);
 
-            // System.Console.WriteLine("1 " +Environment.GetEnvironmentVariable("TEAM_ID"));
+            System.Console.WriteLine("1a " +Environment.GetEnvironmentVariable("host"));
+
+            IDictionary data = Environment.GetEnvironmentVariables();
+  
+            // Display the details with key and value
+            foreach (DictionaryEntry i in data)
+            {
+                Console.WriteLine("{0}:{1}", i.Key, i.Value);
+            }
 
             
             if (env.IsDevelopment())
             {
                 System.Console.WriteLine(env.EnvironmentName);
                 MicrosoftSync.TeamId=Convert.ToInt32(Environment.GetEnvironmentVariable("TEAM_ID"));
+                
                 app.UseDeveloperExceptionPage();
             }
 
@@ -198,9 +207,9 @@ n: ""3Dzq5xtKNmH79W4JQ8nKeE-RegQ6OpZqTG7bfWHkafBVgz9WE8YFozGGKc9k1RaGzkTuS02IyFN
 
             app.UseRouting();
 
-            // app.UseAuthentication();
+            app.UseAuthentication();
 
-            // app.UseAuthorization();
+            app.UseAuthorization();
             // env
             
             app.UseEndpoints(endpoints =>
